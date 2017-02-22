@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
             request.allowScanningByMediaScanner();
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         }
+        
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "israel_gtfs.zip");
 
         // get download service and enqueue file

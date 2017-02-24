@@ -1,18 +1,21 @@
 package com.beezyworks.busmap;
 
-import android.app.DownloadManager;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,22 +59,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean downloadFile(View view){
-        String url = "http://www.brainjar.com/java/host/test.html";
+        String url = "ftp://gtfs.mot.gov.il/israel-public-transportation.zip";//"http://www.brainjar.com/java/host/test.html";
+
+
+        FTPClient ftp = null;
+
+        try {
+            ftp = new FTPClient();
+            ftp.connect(url);
+            //Log.d(LOG_TAG, "Connected. Reply: " + ftp.getReplyString());
+
+            ftp.setFileType(FTP.BINARY_FILE_TYPE);
+            Log.d(LOG_TAG, "Downloading");
+            ftp.enterLocalPassiveMode();
+
+            OutputStream outputStream = null;
+            boolean success = false;
+            try {
+                outputStream = new BufferedOutputStream(new FileOutputStream(
+                        localFile));
+                success = ftp.retrieveFile(filename, outputStream);
+            } finally {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+
+            return success;
+        } finally {
+            if (ftp != null) {
+                ftp.logout();
+                ftp.disconnect();
+            }
+        }
+             /*
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
         request.setDescription("Israel bus gtfs");
         request.setTitle("Israel_bus_gtfs");
-        // in order for this if to run, you must use the android 3.2 to compile your app
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            request.allowScanningByMediaScanner();
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        }
-        
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "israel_gtfs.zip");
+
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "israel_gtfs.zip");
 
         // get download service and enqueue file
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         manager.enqueue(request);
-
+        */
         return true;
     }
 }

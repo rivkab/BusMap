@@ -14,9 +14,15 @@ import android.view.View;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,16 +66,15 @@ public class MainActivity extends AppCompatActivity {
     private class DownloadFilesTask extends AsyncTask<String, Void, Boolean>{
         protected Boolean doInBackground(String... server) {
 
-
             FTPClient ftp = new FTPClient();
-            boolean error = false;
+            boolean success = true;
             try {
                 int reply;
-                Log.d("myapp","Trying to connect");
+                Log.d(TAG,"Trying to connect");
                 ftp.connect(server[0]);
-                Log.d("myapp","Connected to " + server + ".");
+                Log.d(TAG,"Connected to " + server[0] + ".");
 
-                System.out.print(ftp.getReplyString());
+                Log.d(TAG,"Reply string: " + ftp.getReplyString());
 
                 // After connection attempt, you should check the reply code to verify
                 // success.
@@ -77,14 +82,29 @@ public class MainActivity extends AppCompatActivity {
 
                 if(!FTPReply.isPositiveCompletion(reply)) {
                     ftp.disconnect();
-                    System.err.println("FTP server refused connection.");
+                    Log.e(TAG,"FTP server refused connection.");
                     System.exit(1);
                 }
                 //... // transfer files TODO
+                String remoteFile = "/israel-public-transportation.zip";
+                File downloadFile = new File(getFilesDir(), "/israel-public-transportation.zip");
+                OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile));
+                boolean gotFile = ftp.retrieveFile(remoteFile, outputStream1);
+                Log.d(TAG,"Retrieved file?: "+gotFile);
+                outputStream1.close();
+
+                if (gotFile) {
+                    Log.d(TAG,"File has been downloaded successfully.");
+                }
+                ///until here TODO
+
+
+
                 ftp.logout();
             } catch(IOException e) {
-                error = true;
+                success = false;
                 e.printStackTrace();
+                Log.d(TAG,e.getMessage());
             } finally {
                 if(ftp.isConnected()) {
                     try {
@@ -97,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            return Boolean.TRUE;
+            return success;
         }
 
 
@@ -105,60 +125,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void downloadFile(View view){
         Log.d("myapp","hello");
-        String server = "ftp://gtfs.mot.gov.il";
+        String server = "gtfs.mot.gov.il";
         new DownloadFilesTask().execute(server);
     }
         //String url = "ftp://gtfs.mot.gov.il/israel-public-transportation.zip";//"http://www.brainjar.com/java/host/test.html";
 
 
-    /*    FTPClient ftp = new FTPClient();
 
-        boolean error = false;
-        try {
-            int reply;
-            String server = "ftp://gtfs.mot.gov.il/israel-public-transportation.zip";
-            ftp.connect(server);
-            System.out.println("Connected to " + server + ".");
-            System.out.print(ftp.getReplyString());
-
-            // After connection attempt, you should check the reply code to verify
-            // success.
-            reply = ftp.getReplyCode();
-
-            if(!FTPReply.isPositiveCompletion(reply)) {
-                ftp.disconnect();
-                System.err.println("FTP server refused connection.");
-                System.exit(1);
-            }
-            //... // transfer files TODO
-            ftp.logout();
-        } catch(IOException e) {
-            error = true;
-            e.printStackTrace();
-        } finally {
-            if(ftp.isConnected()) {
-                try {
-                    ftp.disconnect();
-                } catch(IOException ioe) {
-                    // do nothing
-                }
-            }
-            //System.exit(error ? 1 : 0);
-        }
-             /*
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        request.setDescription("Israel bus gtfs");
-        request.setTitle("Israel_bus_gtfs");
-
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-        //request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "israel_gtfs.zip");
-
-        // get download service and enqueue file
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        manager.enqueue(request);
-
-        return true;
-    }
-    */
 }

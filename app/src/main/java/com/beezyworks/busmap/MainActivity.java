@@ -43,19 +43,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -63,73 +58,80 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class DownloadFilesTask extends AsyncTask<String, Void, Boolean>{
+    private class DownloadFilesTask extends AsyncTask<String, Void, Boolean> {
         protected Boolean doInBackground(String... server) {
 
             FTPClient ftp = new FTPClient();
             boolean success = true;
             try {
                 int reply;
-                Log.d(TAG,"Trying to connect");
+                Log.d(TAG, "Trying to connect");
                 ftp.connect(server[0]);
-                Log.d(TAG,"Connected to " + server[0] + ".");
-
-                Log.d(TAG,"Reply string: " + ftp.getReplyString());
-
-                // After connection attempt, you should check the reply code to verify
-                // success.
+                Log.d(TAG, "Connected to " + server[0]);
+                Log.d(TAG, "Reply string: " + ftp.getReplyString());
+                ftp.login("anonymous", "me@gmail.com");
+                // After connection attempt, check the reply code to verify success.
                 reply = ftp.getReplyCode();
 
-                if(!FTPReply.isPositiveCompletion(reply)) {
+                if (!FTPReply.isPositiveCompletion(reply)) {
                     ftp.disconnect();
-                    Log.e(TAG,"FTP server refused connection.");
-                    System.exit(1);
+                    Log.e(TAG, "FTP server refused connection.");
+                    return false;
                 }
+
+                ftp.enterLocalPassiveMode();
+                ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
+
                 //... // transfer files TODO
-                String remoteFile = "/israel-public-transportation.zip";
+                String remoteFile = "israel-public-transportation.zip";
                 File downloadFile = new File(getFilesDir(), "/israel-public-transportation.zip");
                 OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile));
-                boolean gotFile = ftp.retrieveFile(remoteFile, outputStream1);
-                Log.d(TAG,"Retrieved file?: "+gotFile);
+
+                boolean result = ftp.retrieveFile(remoteFile, outputStream1);
+//                InputStream inputStream = ftp.retrieveFileStream(remoteFile);
+                // ftp.getReply();
+                String whatIs = ftp.getReplyString();
+                String poopyButt = "Bopaera";
+//                if(inputStream == null){
+//                    Log.d(TAG,"null inputstream");
+//                }
+//                IOUtils.copy(inputStream, outputStream1);
+//                outputStream1.flush();//?
+//                IOUtils.closeQuietly(outputStream1);
+//                IOUtils.closeQuietly(inputStream);
+
+
+                //Log.d(TAG,"Retrieved file?: "+gotFile);
                 outputStream1.close();
 
+                /*
                 if (gotFile) {
                     Log.d(TAG,"File has been downloaded successfully.");
-                }
+                }*/
                 ///until here TODO
 
 
-
                 ftp.logout();
-            } catch(IOException e) {
+            } catch (IOException e) {
                 success = false;
                 e.printStackTrace();
-                Log.d(TAG,e.getMessage());
+                Log.d(TAG, e.getMessage());
             } finally {
-                if(ftp.isConnected()) {
+                if (ftp.isConnected()) {
                     try {
                         ftp.disconnect();
-                    } catch(IOException ioe) {
-                        // do nothing
+                    } catch (IOException ioe) {
+                        Log.d("IO Exception", ioe.getMessage());
                     }
                 }
-                //System.exit(error ? 1 : 0);
             }
-
-
             return success;
         }
-
-
     }
 
-    public void downloadFile(View view){
-        Log.d("myapp","hello");
+    public void downloadFile(View view) {
         String server = "gtfs.mot.gov.il";
         new DownloadFilesTask().execute(server);
     }
-        //String url = "ftp://gtfs.mot.gov.il/israel-public-transportation.zip";//"http://www.brainjar.com/java/host/test.html";
-
-
 
 }

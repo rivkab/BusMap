@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -64,9 +65,10 @@ public class MainActivity extends AppCompatActivity {
             boolean error = false;
             try {
                 int reply;
-
+                Log.d("myapp","Trying to connect");
                 ftp.connect(server[0]);
-                System.out.println("Connected to " + server + ".");
+                Log.d("myapp","Connected to " + server + ".");
+
                 System.out.print(ftp.getReplyString());
 
                 // After connection attempt, you should check the reply code to verify
@@ -102,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void downloadFile(View view){
-        String server = "ftp://gtfs.mot.gov.il/israel-public-transportation.zip";
+        Log.d("myapp","hello");
+        String server = "ftp://gtfs.mot.gov.il";
         new DownloadFilesTask().execute(server);
     }
         //String url = "ftp://gtfs.mot.gov.il/israel-public-transportation.zip";//"http://www.brainjar.com/java/host/test.html";

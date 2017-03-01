@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
                 //transfer files
                 downloadFile = new File(getFilesDir(), "/"+REMOTE_FILE);
                 OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile));
-                //TODO
                 boolean gotFile = ftp.retrieveFile(REMOTE_FILE, outputStream1);
                 //String whatIs = ftp.getReplyString();
                 outputStream1.close();
@@ -121,9 +120,9 @@ public class MainActivity extends AppCompatActivity {
             helloTextView.setText("Downloading...");
         }
 
-        //unpack zip. also convert to JSON?
+        //unpack zip. what else? what do we want to do?
+        //do we want to unzip as an asynctask?
         protected void onPostExecute(Boolean result){
-            //TODO
             helloTextView.setText("File has been downloaded successfully.");
             File internal[] = getFilesDir().listFiles();
             for (File f: internal){
@@ -133,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
 
             Decompress d = new Decompress(getFilesDir()+"/"+REMOTE_FILE, getFilesDir()+"/unzipped/");
             d.unzip();
-
 
         }
     }

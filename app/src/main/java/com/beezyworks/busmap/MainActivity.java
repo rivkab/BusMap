@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
                 //transfer files
                 downloadFile = new File(getFilesDir(), "/"+REMOTE_FILE);
                 OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile));
+                //TODO
                 boolean gotFile = ftp.retrieveFile(REMOTE_FILE, outputStream1);
                 //String whatIs = ftp.getReplyString();
                 outputStream1.close();

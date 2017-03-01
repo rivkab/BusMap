@@ -35,9 +35,11 @@ public class Decompress {
                 if(ze.isDirectory()) {
                     _dirChecker(ze.getName());
                 } else {
+                    byte[] buffer = new byte[1024];
+                    int length;
                     FileOutputStream fout = new FileOutputStream(_location + ze.getName());
-                    for (int c = zin.read(); c != -1; c = zin.read()) {
-                        fout.write(c);
+                    while ((length = zin.read(buffer))>0) {
+                        fout.write(buffer, 0, length);
                     }
 
                     zin.closeEntry();

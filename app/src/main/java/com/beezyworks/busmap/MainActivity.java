@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
@@ -23,6 +24,8 @@ import java.io.OutputStream;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final String REMOTE_FILE = "israel-public-transportation.zip";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,20 +62,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class DownloadFilesTask extends AsyncTask<String, Void, Boolean> {
+
+
+        TextView helloTextView = (TextView)findViewById(R.id.hello_text);
+        File downloadFile;
+
         protected Boolean doInBackground(String... server) {
 
             FTPClient ftp = new FTPClient();
             boolean success = true;
             try {
+                //connect to ftp server
                 int reply;
-                Log.d(TAG, "Trying to connect");
                 ftp.connect(server[0]);
-                Log.d(TAG, "Connected to " + server[0]);
-                Log.d(TAG, "Reply string: " + ftp.getReplyString());
                 ftp.login("anonymous", "me@gmail.com");
+
                 // After connection attempt, check the reply code to verify success.
                 reply = ftp.getReplyCode();
-
                 if (!FTPReply.isPositiveCompletion(reply)) {
                     ftp.disconnect();
                     Log.e(TAG, "FTP server refused connection.");
@@ -82,34 +88,16 @@ public class MainActivity extends AppCompatActivity {
                 ftp.enterLocalPassiveMode();
                 ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
 
-                //... // transfer files TODO
-                String remoteFile = "israel-public-transportation.zip";
-                File downloadFile = new File(getFilesDir(), "/israel-public-transportation.zip");
+                //transfer files
+                downloadFile = new File(getFilesDir(), "/"+REMOTE_FILE);
                 OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile));
-
-                boolean result = ftp.retrieveFile(remoteFile, outputStream1);
-//                InputStream inputStream = ftp.retrieveFileStream(remoteFile);
-                // ftp.getReply();
-                String whatIs = ftp.getReplyString();
-                String poopyButt = "Bopaera";
-//                if(inputStream == null){
-//                    Log.d(TAG,"null inputstream");
-//                }
-//                IOUtils.copy(inputStream, outputStream1);
-//                outputStream1.flush();//?
-//                IOUtils.closeQuietly(outputStream1);
-//                IOUtils.closeQuietly(inputStream);
-
-
-                //Log.d(TAG,"Retrieved file?: "+gotFile);
+                boolean gotFile = ftp.retrieveFile(REMOTE_FILE, outputStream1);
+                //String whatIs = ftp.getReplyString();
                 outputStream1.close();
 
-                /*
                 if (gotFile) {
                     Log.d(TAG,"File has been downloaded successfully.");
-                }*/
-                ///until here TODO
-
+                }
 
                 ftp.logout();
             } catch (IOException e) {
@@ -126,6 +114,26 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             return success;
+        }
+
+        protected void onPreExecute(){
+            helloTextView.setText("Downloading...");
+        }
+
+        //unpack zip. also convert to JSON?
+        protected void onPostExecute(Boolean result){
+            //TODO
+            helloTextView.setText("File has been downloaded successfully.");
+            File internal[] = getFilesDir().listFiles();
+            for (File f: internal){
+                Log.d(TAG,f.getName());
+
+            }
+
+            Decompress d = new Decompress(getFilesDir()+"/"+REMOTE_FILE, getFilesDir()+"/unzipped/");
+            d.unzip();
+
+
         }
     }
 

@@ -24,7 +24,7 @@ public class Decompress {
         _dirChecker("");
     }
 
-    public void unzip() {
+    public boolean unzip() {
         try  {
             FileInputStream fin = new FileInputStream(_zipFile);
             ZipInputStream zin = new ZipInputStream(fin);
@@ -48,8 +48,10 @@ public class Decompress {
 
             }
             zin.close();
+            return true;
         } catch(Exception e) {
             Log.e("Decompress", "unzip", e);
+            return false;
         }
 
     }

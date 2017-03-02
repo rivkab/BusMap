@@ -6,25 +6,18 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
-
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final String REMOTE_FILE = "israel-public-transportation.zip";
+    private static final String REMOTE_FILE = "/israel-public-transportation.zip";
+    TextView helloTextView;
 
 
     @Override
@@ -42,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        helloTextView = (TextView)findViewById(R.id.hello_text);
     }
 
     @Override
@@ -61,84 +55,51 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class DownloadFilesTask extends AsyncTask<String, Void, Boolean> {
+    private class getBusData extends AsyncTask<String, Void, Boolean> {
 
-
-        TextView helloTextView = (TextView)findViewById(R.id.hello_text);
-        File downloadFile;
+        File busZipFile; //TODO can maybe declare file inside FTPDownload
 
         protected Boolean doInBackground(String... server) {
 
-            FTPClient ftp = new FTPClient();
-            boolean success = true;
-            try {
-                //connect to ftp server
-                int reply;
-                ftp.connect(server[0]);
-                ftp.login("anonymous", "me@gmail.com");
+            //download file
+            String destination = getFilesDir()+REMOTE_FILE;
+            FTPDownload f = new FTPDownload(server[0],REMOTE_FILE,destination);
+            boolean success = f.retrieve(busZipFile);
 
-                // After connection attempt, check the reply code to verify success.
-                reply = ftp.getReplyCode();
-                if (!FTPReply.isPositiveCompletion(reply)) {
-                    ftp.disconnect();
-                    Log.e(TAG, "FTP server refused connection.");
-                    return false;
-                }
+            //unzip file (if download successful)
+            if(success){
+                Decompress d = new Decompress(destination, getFilesDir()+"/unzipped/");
+                success = d.unzip();
 
-                ftp.enterLocalPassiveMode();
-                ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
+                //build realm db (if download, unzip successful)
+                //TODO
 
-                //transfer files
-                downloadFile = new File(getFilesDir(), "/"+REMOTE_FILE);
-                OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile));
-                boolean gotFile = ftp.retrieveFile(REMOTE_FILE, outputStream1);
-                //String whatIs = ftp.getReplyString();
-                outputStream1.close();
-
-                if (gotFile) {
-                    Log.d(TAG,"File has been downloaded successfully.");
-                }
-
-                ftp.logout();
-            } catch (IOException e) {
-                success = false;
-                e.printStackTrace();
-                Log.d(TAG, e.getMessage());
-            } finally {
-                if (ftp.isConnected()) {
-                    try {
-                        ftp.disconnect();
-                    } catch (IOException ioe) {
-                        Log.d("IO Exception", ioe.getMessage());
-                    }
-                }
             }
+
+
             return success;
+
         }
 
         protected void onPreExecute(){
-            helloTextView.setText("Downloading...");
+            helloTextView.setText("Fetching data");
         }
 
-        //unpack zip. what else? what do we want to do?
-        //do we want to unzip as an asynctask?
         protected void onPostExecute(Boolean result){
-            helloTextView.setText("File has been downloaded successfully.");
-            File internal[] = getFilesDir().listFiles();
-            for (File f: internal){
-                Log.d(TAG,f.getName());
-
+            if(result) {
+                helloTextView.setText("File downloaded and unzipped");
+            }else{
+                helloTextView.setText("Download or zipping failed");
             }
 
-            Decompress d = new Decompress(getFilesDir()+"/"+REMOTE_FILE, getFilesDir()+"/unzipped/");
-            d.unzip();
-
         }
+
+
     }
 
     public void downloadFile(View view) {
         String server = "gtfs.mot.gov.il";
-        new DownloadFilesTask().execute(server);
+        new getBusData().execute(server);
     }
 
 }

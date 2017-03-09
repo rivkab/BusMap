@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,9 +16,9 @@ import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = MainActivity.class.getName();
     private static final String REMOTE_FILE = "/israel-public-transportation.zip";
-    TextView helloTextView;
+    private TextView helloTextView;
 
 
     @Override
@@ -55,26 +56,34 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
     private class getBusData extends AsyncTask<String, Void, Boolean> {
 
         File busZipFile; //TODO can maybe declare file inside FTPDownload
 
         protected Boolean doInBackground(String... server) {
 
+            boolean success = true;
+
             //download file
+            Log.d(TAG,"now downloading file");
             String destination = getFilesDir()+REMOTE_FILE;
             FTPDownload f = new FTPDownload(server[0],REMOTE_FILE,destination);
-            boolean success = f.retrieve(busZipFile);
+//            success = f.retrieve(busZipFile); //TODO
 
             //unzip file (if download successful)
             if(success){
+                Log.d(TAG,"unzipping file");
                 Decompress d = new Decompress(destination, getFilesDir()+"/unzipped/");
                 success = d.unzip();
 
                 //build realm db (if download, unzip successful)
                 //TODO
+                //use stops.txt
+                Log.d(TAG,"building DB");
 
             }
+
 
 
             return success;

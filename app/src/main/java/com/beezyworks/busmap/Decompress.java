@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.LinkedList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -16,11 +17,12 @@ import java.util.zip.ZipInputStream;
 public class Decompress {
     private String _zipFile;
     private String _location;
+    private LinkedList<String> _fileNames;
 
     public Decompress(String zipFile, String location) {
         _zipFile = zipFile;
         _location = location;
-
+        _fileNames = new LinkedList<String>();
         _dirChecker("");
     }
 
@@ -35,6 +37,7 @@ public class Decompress {
                 if(ze.isDirectory()) {
                     _dirChecker(ze.getName());
                 } else {
+                    _fileNames.add(ze.getName()); //TODO what to do if error thrown - remove last entry on list?
                     byte[] buffer = new byte[1024];
                     int length;
                     FileOutputStream fout = new FileOutputStream(_location + ze.getName());
@@ -54,6 +57,10 @@ public class Decompress {
             return false;
         }
 
+    }
+
+    public LinkedList<String> getFileNames(){
+        return _fileNames;
     }
 
     private void _dirChecker(String dir) {

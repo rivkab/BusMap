@@ -38,7 +38,7 @@ public class Decompress {
                     _dirChecker(ze.getName());
                 } else {
                     _fileNames.add(ze.getName()); //TODO what to do if error thrown - remove last entry on list?
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[2048];
                     int length;
                     FileOutputStream fout = new FileOutputStream(_location + ze.getName());
                     while ((length = zin.read(buffer))>0) {

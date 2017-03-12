@@ -22,8 +22,79 @@ public class BusStop extends RealmObject {
     private double lat;
     private double lon;
 
-    //private LOC_TYPE locType;
-    //private int parentStation;
-    //private int zone;
+    private int locType; //note that this could be bool or enum
+    private String parentStation;
+    private String zone;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
+    }
+
+    public int getLocType() {
+        return locType;
+    }
+
+    public void setLocType(int locType) {
+        this.locType = locType;
+    }
+
+    public String getParentStation() {
+        return parentStation;
+    }
+
+    public void setParentStation(String parentStation) {
+        this.parentStation = parentStation;
+    }
+
+    public String getZone() {
+        return zone;
+    }
+
+    public void setZone(String zone) {
+        this.zone = zone;
+    }
 }

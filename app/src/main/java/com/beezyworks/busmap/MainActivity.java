@@ -12,13 +12,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import io.realm.Realm;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
     private static final String REMOTE_FILE = "/israel-public-transportation.zip";
     private TextView helloTextView;
+    private Realm realm;
 
 
     @Override
@@ -36,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        helloTextView = (TextView)findViewById(R.id.hello_text);
+        helloTextView = (TextView) findViewById(R.id.hello_text);
+        Realm.init(this);
     }
 
     @Override
@@ -66,39 +74,72 @@ public class MainActivity extends AppCompatActivity {
             boolean success = true;
 
             //download file
-            Log.d(TAG,"now downloading file");
-            String destination = getFilesDir()+REMOTE_FILE;
-            FTPDownload f = new FTPDownload(server[0],REMOTE_FILE,destination);
+            Log.d(TAG, "now downloading file");
+            String destination = getFilesDir() + REMOTE_FILE;
+            FTPDownload f = new FTPDownload(server[0], REMOTE_FILE, destination);
 //            success = f.retrieve(busZipFile); //TODO
 
             //unzip file (if download successful)
-            if(success){
-                Log.d(TAG,"unzipping file");
-                Decompress d = new Decompress(destination, getFilesDir()+"/unzipped/");
-                success = d.unzip();
+            if (success) {
+                Log.d(TAG, "unzipping file");
+                Decompress d = new Decompress(destination, getFilesDir() + "/unzipped/");
+//                success = d.unzip();
 
                 //build realm db (if download, unzip successful)
                 //TODO
                 //use stops.txt
-                Log.d(TAG,"building DB");
+                Log.d(TAG, "building DB");
+
+                realm = Realm.getDefaultInstance();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        try {
+                            FileInputStream is = new FileInputStream(getFilesDir() + "/unzipped/stops.txt");
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                            String line;
+                            line = reader.readLine(); //read away header
+                            while ((line = reader.readLine()) != null) {
+                                String[] rowData = line.split(",");
+                                if(rowData.length == 9) {//if line is legal length, build object
+                                    BusStop stop = realm.createObject(BusStop.class);
+                                    Log.d(TAG, String.valueOf(rowData.length));
+                                    stop.setId(Integer.parseInt(rowData[0]));
+                                    stop.setCode(Integer.parseInt(rowData[1]));
+                                    stop.setName(rowData[2]);
+                                    stop.setDesc(rowData[3]);
+                                    stop.setLat(Double.parseDouble(rowData[4]));
+                                    stop.setLon(Double.parseDouble(rowData[5]));
+                                    stop.setLocType(Integer.parseInt(rowData[6]));
+                                    stop.setParentStation(rowData[7]);
+                                    stop.setZone(rowData[8]);
+                                }
+                            }
+                            is.close();
+                        } catch (IOException e) {
+                            // handle exception TODO
+                            //also - are things closed properly?
+                        }
+                    }
+                });
+                realm.close();
 
             }
-
 
 
             return success;
 
         }
 
-        protected void onPreExecute(){
+        protected void onPreExecute() {
             helloTextView.setText("Fetching data");
         }
 
-        protected void onPostExecute(Boolean result){
-            if(result) {
+        protected void onPostExecute(Boolean result) {
+            if (result) {
                 helloTextView.setText("File downloaded and unzipped");
-            }else{
-                helloTextView.setText("Download or zipping failed");
+            } else {
+                helloTextView.setText("Download or unzipping failed");
             }
 
         }

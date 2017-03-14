@@ -12,6 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -64,6 +66,11 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close(); // Remember to close Realm when done.
+    }
 
     private class getBusData extends AsyncTask<String, Void, Boolean> {
 
@@ -83,52 +90,58 @@ public class MainActivity extends AppCompatActivity {
             if (success) {
                 Log.d(TAG, "unzipping file");
                 Decompress d = new Decompress(destination, getFilesDir() + "/unzipped/");
-//                success = d.unzip();
+//                success = d.unzip();  //TODO
 
-                //build realm db (if download, unzip successful)
-                //TODO
-                //use stops.txt
+                //build realm db (if download, unzip successful) -use stops.txt
                 Log.d(TAG, "building DB");
-
-                realm = Realm.getDefaultInstance();
-                realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        try {
-                            FileInputStream is = new FileInputStream(getFilesDir() + "/unzipped/stops.txt");
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                            String line;
-                            line = reader.readLine(); //read away header
-                            while ((line = reader.readLine()) != null) {
-                                String[] rowData = line.split(",");
-                                if(rowData.length == 9) {//if line is legal length, build object
-                                    BusStop stop = realm.createObject(BusStop.class);
-                                    Log.d(TAG, String.valueOf(rowData.length));
-                                    stop.setId(Integer.parseInt(rowData[0]));
-                                    stop.setCode(Integer.parseInt(rowData[1]));
-                                    stop.setName(rowData[2]);
-                                    stop.setDesc(rowData[3]);
-                                    stop.setLat(Double.parseDouble(rowData[4]));
-                                    stop.setLon(Double.parseDouble(rowData[5]));
-                                    stop.setLocType(Integer.parseInt(rowData[6]));
-                                    stop.setParentStation(rowData[7]);
-                                    stop.setZone(rowData[8]);
-                                }
-                            }
-                            is.close();
-                        } catch (IOException e) {
-                            // handle exception TODO
-                            //also - are things closed properly?
-                        }
-                    }
-                });
-                realm.close();
+                buildStopsDB();  //TODO error handling for this
 
             }
 
-
             return success;
 
+        }
+
+        private void buildStopsDB(){
+
+            realm = Realm.getDefaultInstance();
+            realm.executeTransaction(new Realm.Transaction() {
+
+                @Override
+                public void execute(Realm realm) {
+
+                    FileInputStream is = null;
+                    try {
+                        is = new FileInputStream(getFilesDir() + "/unzipped/stops.txt");
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                        String line = reader.readLine(); //read away header line
+                        while ((line = reader.readLine()) != null) {
+                            String[] rowData = line.split(",");
+                            if(rowData.length == 9) {//if line is legal length, build object
+                                BusStop stop = realm.createObject(BusStop.class);
+                                stop.setId(Integer.parseInt(rowData[0]));
+                                stop.setCode(Integer.parseInt(rowData[1]));
+                                stop.setName(rowData[2]);
+                                stop.setDesc(rowData[3]);
+                                stop.setLat(Double.parseDouble(rowData[4]));
+                                stop.setLon(Double.parseDouble(rowData[5]));
+                                stop.setLocType(Integer.parseInt(rowData[6]));
+                                stop.setParentStation(rowData[7]);
+                                stop.setZone(rowData[8]);
+                            }
+                        }
+                        is.close();
+                    } catch (IOException e) {
+                        // handle exception TODO
+                        Log.e(TAG,"error building DB");
+
+                    }finally {
+                        IOUtils.closeQuietly(is);
+                    }
+                }
+
+            });
+            realm.close();
         }
 
         protected void onPreExecute() {

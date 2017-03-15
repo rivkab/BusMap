@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -27,7 +26,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final String TAG = MainActivity.class.getName();
     private static final String REMOTE_FILE = "/israel-public-transportation.zip";
-    private TextView helloTextView;
+    private static final String SERVER = "gtfs.mot.gov.il";
     private Realm realm;
 
 
@@ -42,11 +41,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Downloading and unpacking data file...", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+
+                new getBusData().execute(SERVER);
+
             }
         });
-        helloTextView = (TextView) findViewById(R.id.hello_text);
         Realm.init(this);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -79,6 +80,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
 
         //TODO make this do what i actually want it to do
+        //make a LatLng from each stop in DB - ideally only the nearby stops - is this possible? are they sorted?
+        //Add a busstop marker for each one
+        //hovering/clicking on busstop should give the other metadata
+        //draw colored line for each route (may need other data file for this?)
+
         // Add a marker in Sydney, Australia,
         // and move the map's camera to the same location.
         LatLng sydney = new LatLng(-33.852, 151.211);
@@ -92,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         File busZipFile; //TODO can maybe declare file inside FTPDownload
 
         protected Boolean doInBackground(String... server) {
-
             boolean success = true;
 
             //download file
@@ -110,30 +115,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return success;
         }
 
-
-
-        protected void onPreExecute() {
-            helloTextView.setText("Fetching data");
-        }
-
         protected void onPostExecute(Boolean result) {
             if (result) {
-                helloTextView.setText("File downloaded and unzipped");
-
                 //build realm db (if download, unzip successful) -use stops.txt
                 Log.d(TAG, "building DB");
                 DBBuilder dbb = new DBBuilder(getFilesDir() + "/unzipped/stops.txt");
                 dbb.buildStopsDB();  //TODO error handling for this
-
             } else {
-                helloTextView.setText("Download or unzipping failed");
+                Log.d(TAG, "Downloading or unzipping failed");
             }
         }
-    }
-
-    public void downloadFile(View view) {
-        String server = "gtfs.mot.gov.il";
-        new getBusData().execute(server);
     }
 
 }

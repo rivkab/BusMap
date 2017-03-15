@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 
 import io.realm.Realm;
 
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by Beezy Works Studios on 3/14/2017.
@@ -43,7 +42,7 @@ public class DBBuilder {
                         String[] rowData = line.split(",");
                         if(rowData.length == 9) {//if line is legal length, build object
                             BusStop stop = realm.createObject(BusStop.class);
-                            stop.setId(Integer.parseInt(rowData[0]));
+                            stop.setId(Integer.parseInt(rowData[0]));  //TODO this is for a SPECIFIC file. messy
                             stop.setCode(Integer.parseInt(rowData[1]));
                             stop.setName(rowData[2]);
                             stop.setDesc(rowData[3]);
@@ -55,16 +54,19 @@ public class DBBuilder {
                         }
                     }
                     is.close();
+                    Log.d("DBBuilder", "DB built");
                 } catch (IOException e) {
                     // handle exception TODO
-                    Log.e(TAG,"error building DB");
+                    Log.e("DBBuilder","error building DB");
 
                 }finally {
                     IOUtils.closeQuietly(is);
                 }
+
             }
 
         });
         realm.close();
+
     }
 }

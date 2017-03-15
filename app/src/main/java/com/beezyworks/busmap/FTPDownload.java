@@ -20,14 +20,14 @@ import static android.content.ContentValues.TAG;
 public class FTPDownload {
 
 
-    private String _FTPserver;
-    private String _serverFilePath;
-    private String _destinationPath;
+    private String FTPserver;
+    private String serverFilePath;
+    private String destinationPath;
 
     public FTPDownload(String FTPserver, String serverFilePath, String destinationPath){
-        _FTPserver = FTPserver;
-        _serverFilePath = serverFilePath;
-        _destinationPath = destinationPath;
+        this.FTPserver = FTPserver;
+        this.serverFilePath = serverFilePath;
+        this.destinationPath = destinationPath;
     }
 
     public boolean retrieve(File destination){
@@ -36,7 +36,7 @@ public class FTPDownload {
         try {
             //connect to ftp server
             int reply;
-            ftp.connect(_FTPserver);
+            ftp.connect(FTPserver);
             ftp.login("anonymous", "me@gmail.com");
 
             // After connection attempt, check the reply code to verify success.
@@ -52,9 +52,9 @@ public class FTPDownload {
 
 
             //transfer files
-            destination = new File(_destinationPath);
+            destination = new File(destinationPath);
             OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(destination));
-            boolean gotFile = ftp.retrieveFile(_serverFilePath, outputStream1);
+            boolean gotFile = ftp.retrieveFile(serverFilePath, outputStream1);
             //String whatIs = ftp.getReplyString();
             outputStream1.close();
             if (!gotFile) {

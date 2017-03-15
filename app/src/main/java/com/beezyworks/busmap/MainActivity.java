@@ -52,11 +52,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -78,18 +76,15 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "now downloading file");
             String destination = getFilesDir() + REMOTE_FILE;
             FTPDownload f = new FTPDownload(server[0], REMOTE_FILE, destination);
-//            success = f.retrieve(busZipFile); //TODO
+            success = f.retrieve(busZipFile); //TODO
 
             //unzip file (if download successful)
             if (success) {
                 Log.d(TAG, "unzipping file");
                 Decompress d = new Decompress(destination, getFilesDir() + "/unzipped/");
-//                success = d.unzip();  //TODO
-
+                success = d.unzip();  //TODO
             }
-
             return success;
-
         }
 
 
@@ -110,10 +105,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 helloTextView.setText("Download or unzipping failed");
             }
-
         }
-
-
     }
 
     public void downloadFile(View view) {

@@ -16,12 +16,12 @@ import io.realm.Realm;
  * Created by Beezy Works Studios on 3/14/2017.
  */
 
-public class DBBuilder {
+public class DBManager {
 
     private Realm realm;
     private String filePath;
 
-    public DBBuilder(String filePath){
+    public DBManager(String filePath){
         this.filePath = filePath;
     }
 
@@ -54,10 +54,10 @@ public class DBBuilder {
                         }
                     }
                     is.close();
-                    Log.d("DBBuilder", "DB built");
+                    Log.d("DBManager", "DB built");
                 } catch (IOException e) {
                     // handle exception TODO
-                    Log.e("DBBuilder","error building DB");
+                    Log.e("DBManager","error building DB");
 
                 }finally {
                     IOUtils.closeQuietly(is);
@@ -69,4 +69,8 @@ public class DBBuilder {
         realm.close();
 
     }
+
+
+
+
 }

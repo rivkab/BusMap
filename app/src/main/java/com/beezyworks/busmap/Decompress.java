@@ -5,7 +5,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -15,32 +15,28 @@ import java.util.zip.ZipInputStream;
  */
 
 public class Decompress {
-    private String _zipFile;
-    private String _location;
-    private LinkedList<String> _fileNames;
+    private String zipFile;
+    private String location;
 
     public Decompress(String zipFile, String location) {
-        _zipFile = zipFile;
-        _location = location;
-        _fileNames = new LinkedList<String>();
-        _dirChecker("");
+        this.zipFile = zipFile;
+        this.location = location;
+        dirChecker("");
     }
 
-    public boolean unzip() {
+    public boolean unzip(ArrayList<String> desiredFiles) {
         try  {
-            FileInputStream fin = new FileInputStream(_zipFile);
+            FileInputStream fin = new FileInputStream(zipFile);
             ZipInputStream zin = new ZipInputStream(fin);
             ZipEntry ze = null;
             while ((ze = zin.getNextEntry()) != null) {
-                Log.v("Decompress", "Unzipping " + ze.getName());
-
                 if(ze.isDirectory()) {
-                    _dirChecker(ze.getName());
-                } else {
-                    _fileNames.add(ze.getName()); //TODO what to do if error thrown - remove last entry on list?
+                    dirChecker(ze.getName());
+                } else if(desiredFiles.contains(ze.getName())){
+                    Log.v("Decompress", "Unzipping " + ze.getName());
                     byte[] buffer = new byte[2048];
                     int length;
-                    FileOutputStream fout = new FileOutputStream(_location + ze.getName());
+                    FileOutputStream fout = new FileOutputStream(location + ze.getName());
                     while ((length = zin.read(buffer))>0) {
                         fout.write(buffer, 0, length);
                     }
@@ -59,12 +55,8 @@ public class Decompress {
 
     }
 
-    public LinkedList<String> getFileNames(){
-        return _fileNames;
-    }
-
-    private void _dirChecker(String dir) {
-        File f = new File(_location + dir);
+    private void dirChecker(String dir) {
+        File f = new File(location + dir);
 
         if(!f.isDirectory()) {
             f.mkdirs();

@@ -88,38 +88,57 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //draw colored line for each route (may need other data file for this?)
 
 
-
-
-        // Add a marker in Sydney, Australia,
-        // and move the map's camera to the same location.
-        LatLng sydney = new LatLng(-33.852, 151.211);
-        googleMap.addMarker(new MarkerOptions().position(sydney)
-                .title("Marker in Sydney"));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
         new setStopMarkers().execute(googleMap);
 
     }
 
     //go over realm db and make marker for each latlng
-    private class setStopMarkers extends  AsyncTask<GoogleMap, Void, Boolean>{
-        protected Boolean doInBackground(GoogleMap... map){//TODO
+    private class setStopMarkers extends  AsyncTask<GoogleMap, Void, GoogleMap>{
+
+        ArrayList<simpleStop> stops;
+
+        private class simpleStop{
+            protected LatLng coordinates;
+            protected String description;
+
+            public simpleStop(LatLng coor, String desc){
+                coordinates = coor;
+                description = desc;
+            }
+            protected LatLng getCoordinates(){ return coordinates; }
+            protected String getDescription(){ return description; }
+        }
+
+        protected GoogleMap doInBackground(GoogleMap... map){
             Log.d(TAG, "adding markers");
+
+            stops = new ArrayList<>();
             realm = Realm.getDefaultInstance();
-            RealmResults<BusStop> results = realm.where(BusStop.class).findAll();
+            RealmResults<BusStop> results = realm.where(BusStop.class).findAll(); //TODO get only nearby stops
             for (BusStop b : results) {
                 LatLng stop = new LatLng(b.getLat(), b.getLon());
-                map[0].addMarker(new MarkerOptions().position(stop)
-                        .title(b.getDesc()));
+                stops.add(new simpleStop(stop, b.getDesc()));
             }
             realm.close();
+            return map[0];
+        }
+
+        protected void onPostExecute(GoogleMap map){
+//            for(LatLng l : stopCoordinates){
+//                map.addMarker(new MarkerOptions().position(l));
+//            }
+
+            //TODO below is a trial of one stop
+            map.addMarker(new MarkerOptions().position(stops.get(0).getCoordinates())
+                    .title(stops.get(0).getDescription()));
+            map.moveCamera(CameraUpdateFactory.newLatLng(stops.get(0).getCoordinates()));
             Log.d(TAG, "markers added");
-            return true;//TODO
         }
     }
 
     private class getBusData extends AsyncTask<String, Void, Boolean> {
 
+        //TODO check if file is there; if so, check if timestamp is recent enough to not need download
         File busZipFile; //TODO can maybe declare file inside FTPDownload
         ArrayList<String> desiredFiles = new ArrayList<>(); //TODO this is messy
 

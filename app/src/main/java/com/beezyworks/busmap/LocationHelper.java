@@ -3,13 +3,9 @@ package com.beezyworks.busmap;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
@@ -19,43 +15,37 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.mattaniahbeezy.icecreamsiddur.R;
-
 
 public class LocationHelper implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
-    //Define a request code to send to Google Play services
 
-    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
-    private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
-    private double currentLatitude;
-    private double currentLongitude;
+    GoogleApiClient googleApiClient;
+    Context context;
+    LocationHandled locationHandled;
 
+
+    public static final int LOCATION_REQUEST_CODE = 99;
+    public static final int SAVED = 0;
+    public static final int RETRIEVED = 1;
 
     public LocationHelper(Context context, LocationHandled locationHandled) {
         this.context = context;
-        //this.locationHandled = locationHandled;
-        mGoogleApiClient = new GoogleApiClient.Builder(context)
+        this.locationHandled = locationHandled;
+        googleApiClient = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-        // Create the LocationRequest object
-        mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-                .setFastestInterval(1 * 1000); // 1 second, in milliseconds
     }
 
     public void connect() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS)
-                mGoogleApiClient.connect();
+                googleApiClient.connect();
         } else {
             if (context instanceof Activity) {
-                ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+                ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
             }
             disconnect();
         }
@@ -64,16 +54,13 @@ public class LocationHelper implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onConnected(Bundle bundle) {
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(1000)
+                .setFastestInterval(10);
 
-        if (location == null) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        } else {
-            //If everything went fine lets get latitude and longitude
-            currentLatitude = location.getLatitude();
-            currentLongitude = location.getLongitude();
-
-            Toast.makeText(this, currentLatitude + " WORKS " + currentLongitude + "", Toast.LENGTH_LONG).show();
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
         }
     }
 
@@ -84,39 +71,37 @@ public class LocationHelper implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onLocationChanged(Location location) {
-        currentLatitude = location.getLatitude();
-        currentLongitude = location.getLongitude();
-        Toast.makeText(this, currentLatitude + " WORKS " + currentLongitude + "", Toast.LENGTH_LONG).show();
+
+//        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+//        Resources res = context.getResources();
+//        editor.putString(res.getString(R.string.longitudeKey), String.valueOf(location.getLongitude()));
+//        editor.putString(res.getString(R.string.latitudeKey), String.valueOf(location.getLatitude()));
+//        editor.putString(res.getString(R.string.elevationKey), String.valueOf(location.getAltitude()));
+//        editor.apply();
+        locationHandled.locationAvailable(location, RETRIEVED);
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (connectionResult.hasResolution()) {
-            try {
-                // Start an Activity that tries to resolve the error
-                connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-                   /*
-                    * Thrown if Google Play services canceled the original
-                * PendingIntent
-              */
-            } catch (IntentSender.SendIntentException e) {
-                // Log the error
-                e.printStackTrace();
-            }
-        } else {
-               /*
-            * If no resolution is available, display a dialog to the
-          * user with the error.
-           */
-            Log.e("Error", "Location services connection failed with code " + connectionResult.getErrorCode());
-        }
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+//        Resources res = context.getResources();
+//        double longitude = Double.valueOf(sharedPreferences.getString(res.getString(R.string.longitudeKey), "35.235806"));
+//        double latitude = Double.valueOf(sharedPreferences.getString(res.getString(R.string.latitudeKey), "31.777972"));
+//        double elevation = Double.valueOf(sharedPreferences.getString(res.getString(R.string.elevationKey), "0"));
+//        if (elevation <= 0d)
+//            elevation = 1d;
+//        Location location = new Location(LocationManager.GPS_PROVIDER);
+//        location.setLatitude(latitude);
+//        location.setLongitude(longitude);
+//        location.setAltitude(elevation);
+//        locationHandled.locationAvailable(location, SAVED);
+        disconnect();
     }
 
-//    public interface LocationHandled {
-//        void locationAvailable(Location location, int locationSource);
-//
-//        boolean isAdded();
-//    }
+    public interface LocationHandled {
+        void locationAvailable(Location location, int locationSource);
+
+    }
 
     public void disconnect() {
         if (googleApiClient.isConnected()) {

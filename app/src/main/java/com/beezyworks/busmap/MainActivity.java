@@ -1,29 +1,19 @@
 package com.beezyworks.busmap;
 
 import android.Manifest;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -37,18 +27,21 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationHelper.LocationHandled{
 
     private static final String TAG = MainActivity.class.getName();
     private static final String REMOTE_FILE = "/israel-public-transportation.zip";
     private static final String SERVER = "gtfs.mot.gov.il";
     private Realm realm;
+    private LocationHelper locationHelper;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        locationHelper = new LocationHelper(this, this);
+        locationHelper.connect();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -86,6 +79,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        locationHelper.disconnect();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        locationHelper.connect();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         realm.close(); // Remember to close Realm when done.
@@ -103,6 +108,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         new setStopMarkers().execute(googleMap);
 
+    }
+
+    @Override
+    public void locationAvailable(Location location, int locationSource) {
+        // TODO thing with location
+        Log.i(TAG, "Location gotten!");
+        locationHelper.disconnect();
     }
 
 
@@ -150,6 +162,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LocationHelper.LOCATION_REQUEST_CODE) {
+            for (int i = 0; i < permissions.length; i++) {
+                String permission = permissions[i];
+                int grantResult = grantResults[i];
+
+                if (permission.equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                       locationHelper.connect();
+                    } else {
+                        // Permission denied
+                        // TODO: kick them out of the app?
+                    }
+                }
+            }
+        }
+    }
+
     private class getBusData extends AsyncTask<String, Void, Boolean> {
 
         //TODO check if file is there; if so, check if timestamp is recent enough to not need download
@@ -185,6 +218,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(TAG, "Downloading or unzipping failed");
             }
         }
+
     }
 
 }

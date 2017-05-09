@@ -1,5 +1,7 @@
 package com.beezyworks.busmap;
 
+import android.location.Location;
+
 import io.realm.RealmObject;
 
 /**
@@ -25,6 +27,12 @@ public class BusStop extends RealmObject {
     private int locType; //note that this could be bool or enum
     private String parentStation;
     private String zone;
+
+    public boolean nearby(int maxDistance, double sourceLat, double sourceLon){
+        float[] distance = new float[1];
+        Location.distanceBetween(sourceLat, sourceLon, lat, lon, distance);
+        return distance[0] < maxDistance;
+    }
 
     public int getId() {
         return id;

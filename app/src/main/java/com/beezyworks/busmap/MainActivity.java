@@ -27,13 +27,19 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
+import static com.beezyworks.busmap.R.id.map;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationHelper.LocationHandled{
 
     private static final String TAG = MainActivity.class.getName();
     private static final String REMOTE_FILE = "/israel-public-transportation.zip";
     private static final String SERVER = "gtfs.mot.gov.il";
+    private static final int MAXDISTANCE = 1000; //max distance from current loc to show on map. in meters
+    private static final int ZOOM = 17;
     private Realm realm;
     private LocationHelper locationHelper;
+    private double currentLat = 31.7683;
+    private double currentLon = 35.2137;
 
 
     @Override
@@ -59,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Realm.init(this);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(map);
         mapFragment.getMapAsync(this);
     }
 
@@ -100,12 +106,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
 
         //TODO make this do what i actually want it to do
-        //make a LatLng from each stop in DB - ideally only the nearby stops - is this possible? are they sorted?
+        //make a LatLng of each nearby stop
         //Add a busstop marker for each one
         //hovering/clicking on busstop should give the other metadata
         //draw colored line for each route (may need other data file for this?)
 
-
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLon),ZOOM));
         new setStopMarkers().execute(googleMap);
 
     }
@@ -113,7 +119,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void locationAvailable(Location location, int locationSource) {
         // TODO thing with location
-        Log.i(TAG, "Location gotten!");
+        currentLat = location.getLatitude();
+        currentLon = location.getLongitude();
+        Log.i(TAG, "Location gotten! "+location.getLatitude()+" "+location.getLongitude());
         locationHelper.disconnect();
     }
 
@@ -124,11 +132,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         ArrayList<simpleStop> stops;
 
         private class simpleStop{
-            protected LatLng coordinates;
-            protected String description;
+            private LatLng coordinates;
+            private String description;
 
-            public simpleStop(LatLng coor, String desc){
-                coordinates = coor;
+            public simpleStop(double lat, double lon, String desc){
+                coordinates = new LatLng(lat,lon);
                 description = desc;
             }
             protected LatLng getCoordinates(){ return coordinates; }
@@ -137,27 +145,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         protected GoogleMap doInBackground(GoogleMap... map){
             Log.d(TAG, "adding markers");
-
+            //TODO should we redo this as zoom changes?
             stops = new ArrayList<>();
             realm = Realm.getDefaultInstance();
-            RealmResults<BusStop> results = realm.where(BusStop.class).findAll(); //TODO get only nearby stops
+            RealmResults<BusStop> results = realm.where(BusStop.class).findAll();
             for (BusStop b : results) {
-                LatLng stop = new LatLng(b.getLat(), b.getLon());
-                stops.add(new simpleStop(stop, b.getDesc()));
+                if(b.nearby(MAXDISTANCE,currentLat, currentLon)) {  //only get nearby stops
+                    stops.add(new simpleStop(b.getLat(), b.getLon(), b.getDesc()));//TODO getDesc is useless
+                }
             }
             realm.close();
             return map[0];
         }
 
         protected void onPostExecute(GoogleMap map){
-//            for(LatLng l : stops){
-//                map.addMarker(new MarkerOptions().position(l.getCoordinates()));
-//            }
-
-            //TODO below is a trial of one stop
-            map.addMarker(new MarkerOptions().position(stops.get(0).getCoordinates())
-                    .title(stops.get(0).getDescription()));
-            map.moveCamera(CameraUpdateFactory.newLatLng(stops.get(0).getCoordinates()));
+            for(simpleStop l : stops){
+                map.addMarker(new MarkerOptions().position(l.getCoordinates()).title(l.getDescription()));
+            }
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLon),ZOOM));
             Log.d(TAG, "markers added");
         }
     }

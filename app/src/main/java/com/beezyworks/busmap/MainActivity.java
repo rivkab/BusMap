@@ -227,8 +227,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (result) {
                 //build realm db (if download, unzip successful) -use stops.txt
                 Log.d(TAG, "building DB");
-                DBManager dbm = new DBManager(getFilesDir() + "/unzipped/stops.txt");
-                dbm.buildStopsDB();  //TODO error handling for this
+                DBManager dbm = new DBManager(getFilesDir().getPath());
+                dbm.buildDB();  //TODO error handling for this
             } else {
                 Log.d(TAG, "Downloading or unzipping failed");
             }

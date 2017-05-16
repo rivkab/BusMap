@@ -10,7 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -41,7 +41,8 @@ public class LocationHelper implements GoogleApiClient.ConnectionCallbacks,
 
     public void connect() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS)
+            GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
+            if (googleAPI.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS)
                 googleApiClient.connect();
         } else {
             if (context instanceof Activity) {
@@ -71,13 +72,6 @@ public class LocationHelper implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onLocationChanged(Location location) {
-
-//        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-//        Resources res = context.getResources();
-//        editor.putString(res.getString(R.string.longitudeKey), String.valueOf(location.getLongitude()));
-//        editor.putString(res.getString(R.string.latitudeKey), String.valueOf(location.getLatitude()));
-//        editor.putString(res.getString(R.string.elevationKey), String.valueOf(location.getAltitude()));
-//        editor.apply();
         locationHandled.locationAvailable(location, RETRIEVED);
     }
 

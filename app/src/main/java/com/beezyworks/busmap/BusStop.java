@@ -18,15 +18,10 @@ import io.realm.RealmObject;
 public class BusStop extends RealmObject {
 
     private int id;
-    private int code;
     private String name;
-    private String desc;
     private double lat;
     private double lon;
 
-    private int locType; //note that this could be bool or enum
-    private String parentStation;
-    private String zone;
 
     public boolean nearby(int maxDistance, double sourceLat, double sourceLon){
         float[] distance = new float[1];
@@ -42,28 +37,12 @@ public class BusStop extends RealmObject {
         this.id = id;
     }
 
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
     }
 
     public double getLat() {
@@ -80,29 +59,5 @@ public class BusStop extends RealmObject {
 
     public void setLon(double lon) {
         this.lon = lon;
-    }
-
-    public int getLocType() {
-        return locType;
-    }
-
-    public void setLocType(int locType) {
-        this.locType = locType;
-    }
-
-    public String getParentStation() {
-        return parentStation;
-    }
-
-    public void setParentStation(String parentStation) {
-        this.parentStation = parentStation;
-    }
-
-    public String getZone() {
-        return zone;
-    }
-
-    public void setZone(String zone) {
-        this.zone = zone;
     }
 }

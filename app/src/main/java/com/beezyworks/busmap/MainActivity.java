@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
 import static com.beezyworks.busmap.R.id.map;
@@ -35,7 +36,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String REMOTE_FILE = "/israel-public-transportation.zip";
     private static final String SERVER = "gtfs.mot.gov.il";
     private static final int MAXDISTANCE = 1000; //max distance from current loc to show on map. in meters
-    private static final int ZOOM = 17;
+    private static final int LAUNCH_ZOOM = 8;
+    private static final int VIEW_ZOOM = 17;
     private Realm realm;
     private LocationHelper locationHelper;
     private double currentLat = 31.7683;
@@ -62,8 +64,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
-        Realm.init(this);
-
+        initRealm();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
@@ -102,6 +103,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         realm.close(); // Remember to close Realm when done.
     }
 
+    private void initRealm() {
+        Realm.init(this);
+        RealmConfiguration config = new RealmConfiguration.Builder()
+                .schemaVersion(1)
+                .deleteRealmIfMigrationNeeded()
+                .build();
+        Realm.setDefaultConfiguration(config);
+    }
+
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
@@ -111,14 +122,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //hovering/clicking on busstop should give the other metadata
         //draw colored line for each route (may need other data file for this?)
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLon),ZOOM));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLon), LAUNCH_ZOOM));
         new setStopMarkers().execute(googleMap);
 
     }
 
     @Override
     public void locationAvailable(Location location, int locationSource) {
-        // TODO thing with location
         currentLat = location.getLatitude();
         currentLon = location.getLongitude();
         Log.i(TAG, "Location gotten! "+location.getLatitude()+" "+location.getLongitude());
@@ -133,14 +143,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         private class simpleStop{
             private LatLng coordinates;
-            private String description;
+            private String name;
 
-            public simpleStop(double lat, double lon, String desc){
+            public simpleStop(double lat, double lon, String nm){
                 coordinates = new LatLng(lat,lon);
-                description = desc;
+                name = nm;
             }
             protected LatLng getCoordinates(){ return coordinates; }
-            protected String getDescription(){ return description; }
+            protected String getDescription(){ return name; }
         }
 
         protected GoogleMap doInBackground(GoogleMap... map){
@@ -151,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             RealmResults<BusStop> results = realm.where(BusStop.class).findAll();
             for (BusStop b : results) {
                 if(b.nearby(MAXDISTANCE,currentLat, currentLon)) {  //only get nearby stops
-                    stops.add(new simpleStop(b.getLat(), b.getLon(), b.getDesc()));//TODO getDesc is useless
+                    stops.add(new simpleStop(b.getLat(), b.getLon(), b.getName()));
                 }
             }
             realm.close();
@@ -162,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             for(simpleStop l : stops){
                 map.addMarker(new MarkerOptions().position(l.getCoordinates()).title(l.getDescription()));
             }
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLon),ZOOM));
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLon), VIEW_ZOOM));
             Log.d(TAG, "markers added");
         }
     }

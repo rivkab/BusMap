@@ -28,6 +28,7 @@ public class DBManager {
     public void buildStopsDB(){
 
         realm = Realm.getDefaultInstance();
+
         realm.executeTransactionAsync(new Realm.Transaction() {
 
             @Override
@@ -43,14 +44,10 @@ public class DBManager {
                         if(rowData.length == 9) {//if line is legal length, build object
                             BusStop stop = realm.createObject(BusStop.class);
                             stop.setId(Integer.parseInt(rowData[0]));  //TODO this is for a SPECIFIC file. messy
-                            stop.setCode(Integer.parseInt(rowData[1]));
                             stop.setName(rowData[2]);
-                            stop.setDesc(rowData[3]);
                             stop.setLat(Double.parseDouble(rowData[4]));
                             stop.setLon(Double.parseDouble(rowData[5]));
-                            stop.setLocType(Integer.parseInt(rowData[6]));
-                            stop.setParentStation(rowData[7]);
-                            stop.setZone(rowData[8]);
+
                         }
                     }
                     is.close();

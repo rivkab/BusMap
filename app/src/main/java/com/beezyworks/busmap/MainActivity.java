@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         protected GoogleMap doInBackground(GoogleMap... map){
-            Log.d(TAG, "adding markers");
+            Log.d(TAG, "adding markers");//TODO PROBLEM - this happens before DB is built I think
             //TODO should we redo this as zoom changes?
             stops = new ArrayList<>();
             realm = Realm.getDefaultInstance();

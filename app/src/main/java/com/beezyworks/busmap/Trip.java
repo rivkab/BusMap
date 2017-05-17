@@ -7,7 +7,7 @@ import io.realm.RealmObject;
  * Created by Beezy Works Studios on 5/16/2017.
  */
 
-public class Route extends RealmObject {
+public class Trip extends RealmObject {
 
     private short busNumber;
     private String name;

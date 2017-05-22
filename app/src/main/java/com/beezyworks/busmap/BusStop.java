@@ -3,6 +3,7 @@ package com.beezyworks.busmap;
 import android.location.Location;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Beezy Works Studios on 3/9/2017.
@@ -17,6 +18,7 @@ import io.realm.RealmObject;
 
 public class BusStop extends RealmObject {
 
+    @PrimaryKey
     private int id;
     private String name;
     private double lat;

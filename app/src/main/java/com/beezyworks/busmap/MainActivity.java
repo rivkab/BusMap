@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i(TAG, "Location gotten! "+location.getLatitude()+" "+location.getLongitude());
         locationHelper.disconnect();
     }
-
+    
 
     //go over realm db and make marker for each latlng
     private class setStopMarkers extends  AsyncTask<GoogleMap, Void, GoogleMap>{
@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(TAG, "building DB");
                 DBManager dbm = new DBManager(getFilesDir().getPath());
                 dbm.buildDB();  //TODO error handling for this
+                //TODO redraw markers?
             } else {
                 Log.d(TAG, "Downloading or unzipping failed");
             }

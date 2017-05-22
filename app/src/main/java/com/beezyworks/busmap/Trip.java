@@ -2,6 +2,7 @@ package com.beezyworks.busmap;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Beezy Works Studios on 5/16/2017.
@@ -9,9 +10,22 @@ import io.realm.RealmObject;
 
 public class Trip extends RealmObject {
 
+
+
+    @PrimaryKey
+    private String id;
     private short busNumber;
     private String name;
     private RealmList<BusStop> stops;
+
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public short getBusNumber() {
         return busNumber;

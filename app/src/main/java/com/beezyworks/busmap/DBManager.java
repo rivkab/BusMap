@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 
 
 /**
@@ -41,8 +42,8 @@ public class DBManager {
         @Override
         public void parseLine(String[] lineData) {
             if(lineData.length == legalLength) {//if line is legal length, build object
-                BusStop stop = currRealm.createObject(BusStop.class);//TODO crashing the app
-                stop.setId(Integer.parseInt(lineData[0]));
+                BusStop stop = currRealm.createObject(BusStop.class,Integer.parseInt(lineData[0]) );
+               // stop.setId(Integer.parseInt(lineData[0]));
                 stop.setName(lineData[2]);
                 stop.setLat(Double.parseDouble(lineData[4]));
                 stop.setLon(Double.parseDouble(lineData[5]));
@@ -54,7 +55,7 @@ public class DBManager {
     private class TripLineParser implements LineParser {
 
         final private int legalLength = 8;
-        private int currTripId = 0;
+        private String currTripId = "";
         private Realm currRealm;
 
         public TripLineParser(Realm currRealm){
@@ -63,8 +64,17 @@ public class DBManager {
 
         @Override
         public void parseLine(String[] lineData) {
-            //TODO
-
+            String id = lineData[0];
+            //if trip doesn't yet exist, build new trip
+            Trip trip = currRealm.where(Trip.class).equalTo("id", id).findFirst();
+            if (trip == null) {
+                trip = currRealm.createObject(Trip.class, id);
+                //trip.setBusNumber(); TODO
+                //trip.setName(); TODO
+                trip.setStops(new RealmList<BusStop>());//TODO is this correct
+            }
+            //add stop to trip's list - find it in realm using stop id
+            trip.getStops().add(currRealm.where(BusStop.class).equalTo("id",Integer.parseInt(lineData[3])).findFirst());
         }
     }
 
@@ -98,12 +108,16 @@ public class DBManager {
             @Override
             public void execute(Realm asyncRealm) {
 
+                long time1 = System.currentTimeMillis();//TODO
                 boolean success = parseFile(busStopsFilePath, new BusStopLineParser(asyncRealm));
+                long time2 = System.currentTimeMillis();//TODO
+                Log.d("DBManager","Parse stops: "+(time2-time1));
                 if(success){
                     parseFile(tripsFilePath, new TripLineParser(asyncRealm));
                     Log.d("DBManager", "DB built");
+                    long time3 = System.currentTimeMillis();//TODO
+                    Log.d("DBManager","Parse stops: "+(time2-time1)+" Parse stop_times:"+(time3-time2));
                 }
-
             }
         });
 
